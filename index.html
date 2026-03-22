@@ -1,76 +1,39 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <title>Zhuyin Converter</title>
-    <script src="https://unpkg.com/pinyin-pro"></script>
+    <script src="https://unpkg.com/pinyin-pro@3.18.3/dist/index.js"></script>
     <style>
-        body {
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: sans-serif;
-            text-align: center;
-        }
-        .guide {
-            line-height: 1.8;
-            color: #333;
-        }
-        code {
-            background: #eee;
-            padding: 2px 5px;
-            border-radius: 4px;
-            color: #d14;
-        }
-        #result {
-            font-size: 5rem;
-            font-weight: bold;
-        }
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; text-align: center; background: white; }
+        #result { font-size: 5rem; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="main">
-        <div class="guide">
-            <h2>How to use this Website / 如何使用</h2>
-            <p>Add <code>?search=a=内容</code> for full Zhuyin.</p>
-            <p>Add <code>?search=b=内容</code> for initials only.</p>
-            <hr>
-            <p>Example: <code>你的网址?search=a=你好</code></p>
-        </div>
-    </div>
-
+    <div id="main">Loading...</div>
     <script>
         (function() {
             const { pinyin } = pinyinPro;
-            const params = new URLSearchParams(window.location.search);
+            const url = window.location.href;
             const main = document.getElementById('main');
             
-            let queryKey = "";
-            for (let key of params.keys()) {
-                if (key.includes('search')) {
-                    queryKey = key;
-                    break;
-                }
-            }
+            if (url.includes('search=')) {
+                // 直接从 URL 提取 a=你好 或 b=你好
+                const queryStr = url.split('search=')[1];
+                const type = queryStr.substring(0, 1); // 获取 a 或 b
+                const text = decodeURIComponent(queryStr.substring(2)); // 获取文本内容
 
-            if (queryKey) {
-                const val = params.get(queryKey);
-                const parts = val.split('=');
+                // 强制指定 type 为 zhuyin (注音)
+                let result = pinyin(text, { type: 'zhuyin' });
+
+                if (type === 'b') {
+                    // 只留声母逻辑
+                    result = result.split(' ').map(z => z.charAt(0)).join(' ');
+                }
                 
-                if (parts.length >= 2) {
-                    const mode = parts[0];
-                    const text = decodeURIComponent(parts[1]);
-                    let result = pinyin(text, { type: 'zhuyin' });
-
-                    if (mode === 'b') {
-                        result = result.split(' ').map(z => z.charAt(0)).join(' ');
-                    }
-
-                    main.innerHTML = `<div id="result">${result}</div>`;
-                }
+                main.innerHTML = `<div id="result">${result}</div>`;
+            } else {
+                main.innerHTML = "<h2>Usage: ?search=a=内容 (Full) or ?search=b=内容 (Initial)</h2>";
             }
         })();
     </script>
